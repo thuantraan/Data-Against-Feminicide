@@ -9,12 +9,16 @@
         <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
         <link href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" rel="stylesheet">
 
-        <!-- Include CARTO.js -->
+        <!-- include Carto.js -->
         <script src="https://libs.cartocdn.com/carto.js/v4.2.0/carto.min.js"></script>
         <link href="https://fonts.googleapis.com/css?family=Montserrat:600" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
         <link href="https://carto.com/developers/carto-js/examples/maps/public/style.css" rel="stylesheet">
-    
+
+        <!-- Geocoder-->
+        <link href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" rel="stylesheet"/>
+        <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
         <style>
             html, body, #map-canvas {
                 height: 100%;
@@ -33,8 +37,6 @@
             const map = L.map('map').setView([30, 0], 3);
             map.scrollWheelZoom.disable();
             
-            // add base layer 
-            // TO DO: update with voyager basemap 
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}.png', {
                 maxZoom: 18
             }).addTo(map);
@@ -44,12 +46,30 @@
                 username: 'thuantran'
             });
 
-            const source = new carto.source.Dataset('actors_data_collection_carto_cleaned_4')
-            
-            const layer = new carto.layer.Layer(source);
+            const source = new carto.source.SQL(' \
+            SELECT * \
+                FROM thuantran.countries \
+                WHERE admin IN (SELECT country FROM thuantran.actors_data_collection_carto_cleaned_4) \
+            ');
+
+            const style = new carto.style.CartoCSS(' \
+            #layer { \
+                polygon-fill: #826DBA; \
+                polygon-opacity: 0.8; \
+                ::outline { \
+                    line-width: 1; \
+                    line-color: #FFFFFF; \
+                    line-opacity: 0.8; \
+                } \
+            } \
+            ');
+
+            const layer = new carto.layer.Layer(source, style);
 
             client.addLayer(layer);
             client.getLeafletLayer().addTo(map);
+
+            L.Control.geocoder().addTo(map);
         </script>
     </body>
 </html>
